@@ -150,7 +150,7 @@ class _PatchItemState extends State<PatchItem> {
             onPressed: () => Navigator.of(context).pop(),
           )
         ],
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
       ),
     );
   }
