@@ -45,6 +45,7 @@ class MainActivity : FlutterActivity() {
                     val cacheDirPath = call.argument<String>("cacheDirPath")
                     val mergeIntegrations = call.argument<Boolean>("mergeIntegrations")
                     val resourcePatching = call.argument<Boolean>("resourcePatching")
+                    val keyStoreFilePath = call.argument<String>("keyStoreFilePath")
                     if (patchBundleFilePath != null &&
                                     originalFilePath != null &&
                                     inputFilePath != null &&
@@ -54,7 +55,8 @@ class MainActivity : FlutterActivity() {
                                     selectedPatches != null &&
                                     cacheDirPath != null &&
                                     mergeIntegrations != null &&
-                                    resourcePatching != null
+                                    resourcePatching != null &&
+                                    keyStoreFilePath != null
                     ) {
                         runPatcher(
                                 result,
@@ -67,7 +69,8 @@ class MainActivity : FlutterActivity() {
                                 selectedPatches,
                                 cacheDirPath,
                                 mergeIntegrations,
-                                resourcePatching
+                                resourcePatching,
+                                keyStoreFilePath
                         )
                     } else {
                         result.notImplemented()
@@ -89,13 +92,15 @@ class MainActivity : FlutterActivity() {
             selectedPatches: List<String>,
             cacheDirPath: String,
             mergeIntegrations: Boolean,
-            resourcePatching: Boolean
+            resourcePatching: Boolean,
+            keyStoreFilePath: String
     ) {
         val originalFile = File(originalFilePath)
         val inputFile = File(inputFilePath)
         val patchedFile = File(patchedFilePath)
         val outFile = File(outFilePath)
         val integrations = File(integrationsPath)
+        val keyStoreFile = File(keyStoreFilePath)
 
         val patches =
                 DexPatchBundle(
@@ -156,7 +161,7 @@ class MainActivity : FlutterActivity() {
                                                                                         "update",
                                                                                         mapOf(
                                                                                                 "progress" to
-                                                                                                        0.2,
+                                                                                                        -1.0,
                                                                                                 "header" to
                                                                                                         "",
                                                                                                 "log" to
@@ -173,7 +178,7 @@ class MainActivity : FlutterActivity() {
                                                                                         "update",
                                                                                         mapOf(
                                                                                                 "progress" to
-                                                                                                        0.2,
+                                                                                                        -1.0,
                                                                                                 "header" to
                                                                                                         "",
                                                                                                 "log" to
@@ -190,7 +195,7 @@ class MainActivity : FlutterActivity() {
                                                                                         "update",
                                                                                         mapOf(
                                                                                                 "progress" to
-                                                                                                        0.2,
+                                                                                                        -1.0,
                                                                                                 "header" to
                                                                                                         "",
                                                                                                 "log" to
@@ -207,7 +212,7 @@ class MainActivity : FlutterActivity() {
                                                                                         "update",
                                                                                         mapOf(
                                                                                                 "progress" to
-                                                                                                        0.2,
+                                                                                                        -1.0,
                                                                                                 "header" to
                                                                                                         "",
                                                                                                 "log" to
@@ -314,7 +319,7 @@ class MainActivity : FlutterActivity() {
                                         )
                                 )
                             }
-                            Signer("ReVanced", "s3cur3p@ssw0rd").signApk(patchedFile, outFile)
+                            Signer("ReVanced", "s3cur3p@ssw0rd").signApk(patchedFile, outFile, keyStoreFile)
 
                             handler.post {
                                 installerChannel.invokeMethod(

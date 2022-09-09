@@ -18,6 +18,7 @@ class PatcherAPI {
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
   final RootAPI _rootAPI = RootAPI();
   late Directory _tmpDir;
+  late File _keyStoreFile;
   List<Patch> _patches = [];
   File? _outFile;
 
@@ -25,6 +26,7 @@ class PatcherAPI {
     await _loadPatches();
     Directory appCache = await getTemporaryDirectory();
     _tmpDir = Directory('${appCache.path}/patcher');
+    _keyStoreFile = File('${appCache.path}/revanced-manager.keystore');
     cleanPatcher();
   }
 
@@ -138,6 +140,7 @@ class PatcherAPI {
           'cacheDirPath': cacheDir.path,
           'mergeIntegrations': mergeIntegrations,
           'resourcePatching': resourcePatching,
+          'keyStoreFilePath': _keyStoreFile.path,
         },
       );
     }
@@ -146,12 +149,17 @@ class PatcherAPI {
   Future<bool> installPatchedFile(PatchedApplication patchedApp) async {
     if (_outFile != null) {
       try {
-        if (patchedApp.isRooted && !patchedApp.isFromStorage) {
-          return _rootAPI.installApp(
-            patchedApp.packageName,
-            patchedApp.apkFilePath,
-            _outFile!.path,
-          );
+        if (patchedApp.isRooted) {
+          bool hasRootPermissions = await _rootAPI.hasRootPermissions();
+          if (hasRootPermissions) {
+            return _rootAPI.installApp(
+              patchedApp.packageName,
+              patchedApp.apkFilePath,
+              _outFile!.path,
+            );
+          } else {
+            return false;
+          }
         } else {
           await AppInstaller.installApk(_outFile!.path);
           return await DeviceApps.isAppInstalled(patchedApp.packageName);
@@ -163,14 +171,15 @@ class PatcherAPI {
     return false;
   }
 
-  bool sharePatchedFile(String appName, String version) {
+  void sharePatchedFile(String appName, String version) {
     if (_outFile != null) {
       String prefix = appName.toLowerCase().replaceAll(' ', '-');
-      File share = _outFile!.renameSync('$prefix-revanced_v$version.apk');
+      String newName = '$prefix-revanced_v$version.apk';
+      int lastSeparator = _outFile!.path.lastIndexOf('/');
+      File share = _outFile!.renameSync(
+        _outFile!.path.substring(0, lastSeparator + 1) + newName,
+      );
       ShareExtend.share(share.path, 'file');
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -185,5 +194,9 @@ class PatcherAPI {
     if (patchedApp.isRooted) {
       await _rootAPI.deleteApp(patchedApp.packageName, patchedApp.apkFilePath);
     }
+  }
+
+  void shareLog(String logs) {
+    ShareExtend.share(logs, 'text');
   }
 }

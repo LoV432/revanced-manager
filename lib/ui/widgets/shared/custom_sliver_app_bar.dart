@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class CustomSliverAppBar extends StatelessWidget {
   final Widget title;
+  final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
 
   const CustomSliverAppBar({
     Key? key,
     required this.title,
+    this.actions,
     this.bottom,
   }) : super(key: key);
 
@@ -24,12 +26,10 @@ class CustomSliverAppBar extends StatelessWidget {
             : Theme.of(context).canvasColor,
       ),
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.symmetric(
-          vertical: 23.0,
-          horizontal: 20.0,
-        ),
+        titlePadding: const EdgeInsets.only(bottom: 16.0, left: 20.0),
         title: title,
       ),
+      actions: actions,
       bottom: bottom,
     );
   }

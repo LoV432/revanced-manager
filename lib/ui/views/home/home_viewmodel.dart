@@ -2,21 +2,25 @@
 import 'dart:io';
 import 'package:app_installer/app_installer.dart';
 import 'package:device_apps/device_apps.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:injectable/injectable.dart';
 import 'package:revanced_manager/app/app.locator.dart';
-import 'package:revanced_manager/main_viewmodel.dart';
+import 'package:revanced_manager/app/app.router.dart';
 import 'package:revanced_manager/models/patched_application.dart';
 import 'package:revanced_manager/services/manager_api.dart';
 import 'package:revanced_manager/services/patcher_api.dart';
+import 'package:revanced_manager/ui/views/navigation/navigation_viewmodel.dart';
 import 'package:revanced_manager/ui/views/patcher/patcher_viewmodel.dart';
+import 'package:revanced_manager/ui/widgets/installerView/custom_material_button.dart';
 import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 @lazySingleton
 class HomeViewModel extends BaseViewModel {
+  final NavigationService _navigationService = locator<NavigationService>();
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
   final PatcherAPI _patcherAPI = locator<PatcherAPI>();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -36,6 +40,13 @@ class HomeViewModel extends BaseViewModel {
     _managerAPI.reAssessSavedApps().then((_) => _getPatchedApps());
   }
 
+  void navigateToAppInfo(PatchedApplication app) {
+    _navigationService.navigateTo(
+      Routes.appInfoView,
+      arguments: AppInfoViewArguments(app: app),
+    );
+  }
+
   void toggleUpdatableApps(bool value) {
     showUpdatableApps = value;
     notifyListeners();
@@ -46,7 +57,7 @@ class HomeViewModel extends BaseViewModel {
     locator<PatcherViewModel>().selectedPatches =
         await _patcherAPI.getAppliedPatches(app.appliedPatches);
     locator<PatcherViewModel>().notifyListeners();
-    locator<MainViewModel>().setIndex(1);
+    locator<NavigationViewModel>().setIndex(1);
   }
 
   void _getPatchedApps() {
@@ -136,5 +147,27 @@ class HomeViewModel extends BaseViewModel {
         gravity: ToastGravity.CENTER,
       );
     }
+  }
+
+  Future<void> showUpdateConfirmationDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: I18nText('homeView.updateDialogTitle'),
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        content: I18nText('homeView.updateDialogText'),
+        actions: [
+          CustomMaterialButton(
+            isFilled: false,
+            label: I18nText('cancelButton'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CustomMaterialButton(
+            label: I18nText('okButton'),
+            onPressed: () => updateManager(context),
+          )
+        ],
+      ),
+    );
   }
 }

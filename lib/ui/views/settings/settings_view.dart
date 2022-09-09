@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:revanced_manager/ui/views/contributors/contributors_view.dart';
 import 'package:revanced_manager/ui/views/settings/settings_viewmodel.dart';
 import 'package:revanced_manager/ui/widgets/settingsView/about_widget.dart';
 import 'package:revanced_manager/ui/widgets/settingsView/custom_switch_tile.dart';
 import 'package:revanced_manager/ui/widgets/settingsView/settings_tile_dialog.dart';
 import 'package:revanced_manager/ui/widgets/settingsView/settings_section.dart';
 import 'package:revanced_manager/ui/widgets/settingsView/social_media_widget.dart';
-import 'package:revanced_manager/ui/widgets/settingsView/sources_widget.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_sliver_app_bar.dart';
-import 'package:revanced_manager/ui/widgets/shared/open_container_wrapper.dart';
 import 'package:stacked/stacked.dart';
 
 class SettingsView extends StatelessWidget {
-  final TextEditingController organizationController = TextEditingController();
-  final TextEditingController patchesSourceController = TextEditingController();
-  final TextEditingController integrationsSourceController =
-      TextEditingController();
-
-  SettingsView({Key? key}) : super(key: key);
+  const SettingsView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -68,74 +60,47 @@ class SettingsView extends StatelessWidget {
                             value,
                           ),
                         ),
-                        CustomSwitchTile(
-                          title: I18nText(
-                            'settingsView.dynamicThemeLabel',
-                            child: const Text(
-                              '',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
+                        FutureBuilder<int>(
+                          future: model.getSdkVersion(),
+                          builder: (context, snapshot) => Visibility(
+                            visible: snapshot.hasData &&
+                                snapshot.data! >= ANDROID_12_SDK_VERSION,
+                            child: CustomSwitchTile(
+                              title: I18nText(
+                                'settingsView.dynamicThemeLabel',
+                                child: const Text(
+                                  '',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              subtitle:
+                                  I18nText('settingsView.dynamicThemeHint'),
+                              value: model.getDynamicThemeStatus(),
+                              onTap: (value) => model.setUseDynamicTheme(
+                                context,
+                                value,
                               ),
                             ),
-                          ),
-                          subtitle: I18nText('settingsView.dynamicThemeHint'),
-                          value: model.getDynamicThemeStatus(),
-                          onTap: (value) => model.setUseDynamicTheme(
-                            context,
-                            value,
                           ),
                         ),
                       ],
                     ),
                     SettingsTileDialog(
-                        title: 'settingsView.languageLabel',
-                        subtitle: 'English',
-                        children: <Widget>[
-                          RadioListTile<String>(
-                            title: I18nText('settingsView.englishOption'),
-                            value: 'en',
-                            groupValue: 'en',
-                            onChanged: (value) {
-                              model.updateLanguage(context, value);
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          RadioListTile<String>(
-                            title: I18nText('settingsView.frenchOption'),
-                            value: 'fr',
-                            groupValue: 'en',
-                            onChanged: (value) {
-                              model.updateLanguage(context, value);
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ]),
+                      title: 'settingsView.languageLabel',
+                      subtitle: 'English',
+                      onTap: () => model.showLanguagesDialog(context),
+                    ),
                     const Divider(thickness: 1.0),
                     SettingsSection(
                       title: 'settingsView.patcherSectionTitle',
                       children: <Widget>[
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: I18nText(
-                            'settingsView.rootModeLabel',
-                            child: const Text(
-                              '',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          subtitle: I18nText('settingsView.rootModeHint'),
-                          onTap: () => model.navigateToRootChecker(),
-                        ),
-                        SourcesWidget(
+                        SettingsTileDialog(
                           title: 'settingsView.sourcesLabel',
-                          organizationController: organizationController,
-                          patchesSourceController: patchesSourceController,
-                          integrationsSourceController:
-                              integrationsSourceController,
+                          subtitle: 'settingsView.sourcesLabelHint',
+                          onTap: () => model.showSourcesDialog(context),
                         ),
                       ],
                     ),
@@ -143,23 +108,20 @@ class SettingsView extends StatelessWidget {
                     SettingsSection(
                       title: 'settingsView.teamSectionTitle',
                       children: <Widget>[
-                        OpenContainerWrapper(
-                          openBuilder: (_, __) => const ContributorsView(),
-                          closedBuilder: (_, openContainer) => ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: I18nText(
-                              'settingsView.contributorsLabel',
-                              child: const Text(
-                                '',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: I18nText(
+                            'settingsView.contributorsLabel',
+                            child: const Text(
+                              '',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                            subtitle: I18nText('settingsView.contributorsHint'),
-                            onTap: openContainer,
                           ),
+                          subtitle: I18nText('settingsView.contributorsHint'),
+                          onTap: () => model.navigateToContributors(),
                         ),
                         const SocialMediaWidget(),
                       ],
